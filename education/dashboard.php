@@ -1,4 +1,16 @@
 <?php
+
+ob_start();
+session_start();
+
+$userName = $_SESSION["portal"]["user"]["name"] ?? 'User';
+
+// 1. Include core settings to prevent the fatal error in sidebar.php
+require_once __DIR__ . '/../includes/bootstrap.php';
+
+// 2. Disable the login redirect to allow direct interface access
+smartwills_require_login();
+
 $activePage = 'education';
 ?>
 <!DOCTYPE html>
@@ -25,7 +37,7 @@ $activePage = 'education';
                 <div class="hero-inner">
                     <div class="hero-left">
                         <h5>EDUCATION CENTER</h5>
-                        <h1>Welcome Back, Ahmad</h1>
+                        <h1>Welcome back, <?php echo htmlspecialchars($userName); ?> 👋</h1>
                         <p>Continue your estate planning certification journey.</p>
                     </div>
                     <div class="hero-right">

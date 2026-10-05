@@ -1,14 +1,27 @@
 <?php
-require_once __DIR__ . '/includes/bootstrap.php';
+    ob_start();
+    session_start();
+    
+    include_once(dirname(__FILE__) . "/include/config.php");
+    include_once(dirname(__FILE__) . "/include/function.php");
 
-smartwills_require_login();
+    // Enforce CTO Zelozz-style login guard
+    if (!isset($_SESSION["portal"]["user"]) || empty($_SESSION["portal"]["user"]["id"])) {
+        header("Location: login.php");
+        exit();
+    }
 
-$activePage = 'settings';
-$pageTitle = 'Settings - SmartWills';
-$pageStyles = ['settings.css'];
-$pageScripts = ['settings.js'];
+    $activePage = 'settings';
+    $pageTitle = 'Settings - SmartWills';
+    $pageStyles = ['settings.css'];
+    $pageScripts = ['settings.js'];
 
-include __DIR__ . '/layouts/header.php';
+    // Retrieve logged-in user's session data dynamically
+    $userId = $_SESSION["portal"]["user"]["id"] ?? '';
+    $userName = $_SESSION["portal"]["user"]["name"] ?? '';
+    $userEmail = $_SESSION["portal"]["user"]["email"] ?? '';
+
+    include __DIR__ . '/layouts/header.php';
 ?>
 <div class="wrapper">
     <?php include __DIR__ . '/layouts/sidebar.php'; ?>
@@ -61,7 +74,7 @@ include __DIR__ . '/layouts/header.php';
                     <form class="settings-form" data-demo-message="Personal information saved (demo)">
                         <div class="setting-row">
                             <span class="label"><i class="fas fa-user"></i> Full Name</span>
-                            <input type="text" placeholder="Enter your full name" value="John Doe">
+                            <input type="text" placeholder="Enter your full name" value="<?php echo htmlspecialchars($userName); ?>">
                         </div>
                         <div class="setting-row">
                             <span class="label"><i class="fas fa-birthday-cake"></i> Date of Birth</span>
@@ -69,11 +82,11 @@ include __DIR__ . '/layouts/header.php';
                         </div>
                         <div class="setting-row">
                             <span class="label"><i class="fas fa-id-badge"></i> Account ID</span>
-                            <input type="text" value="SW-10001" readonly>
+                            <input type="text" value="SW-<?php echo htmlspecialchars($userId); ?>" readonly>
                         </div>
                         <div class="setting-row">
                             <span class="label"><i class="fas fa-envelope"></i> Email</span>
-                            <input type="email" placeholder="Enter your email" value="john.doe@example.com">
+                            <input type="email" placeholder="Enter your email" value="<?php echo htmlspecialchars($userEmail); ?>">
                         </div>
                         <div class="btn-group">
                             <button type="submit" class="btn btn-primary">

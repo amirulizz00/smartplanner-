@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/includes/bootstrap.php';
+require_once __DIR__ . '/controller/casecontrol.php';
 
 smartwills_require_login();
 
@@ -8,18 +9,18 @@ $pageTitle = 'Add Case · SmartWills';
 $pageStyles = ['cases.css'];
 $pageScripts = [];
 $message = '';
+$caseController = new CaseController();
+$clients = $caseController->listClients();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $client = isset($_POST['client_name']) ? trim($_POST['client_name']) : '';
-    $type = isset($_POST['case_type']) ? $_POST['case_type'] : 'Will';
-    $status = isset($_POST['status']) ? $_POST['status'] : 'in-progress';
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+    $result = $caseController->createCase($_POST);
 
-    if ($client !== '') {
+    if ($result['success']) {
         header('Location: cases.php?added=1');
         exit;
     }
 
-    $message = 'Please enter a client name.';
+    $message = $result['message'];
 }
 
 include __DIR__ . '/layouts/header.php';
@@ -47,8 +48,13 @@ include __DIR__ . '/layouts/header.php';
                     <div class="fsection">
                         <h3><i class="fas fa-info-circle"></i> Case Information</h3>
                         <div class="frow">
-                            <label>Client Name <span style="color:red;">*</span></label>
-                            <input type="text" name="client_name" placeholder="Enter client name" required>
+                            <label>Client <span style="color:red;">*</span></label>
+                            <select name="client_id" required>
+                                <option value="">Select a client</option>
+                                <?php foreach ($clients as $client): ?>
+                                    <option value="<?= (int)$client['id'] ?>"><?= htmlspecialchars($client['name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <div class="frow">
                             <label>Case Type</label>

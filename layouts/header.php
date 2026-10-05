@@ -2,7 +2,8 @@
 require_once __DIR__ . '/../includes/bootstrap.php';
 
 $pageTitle = $pageTitle ?? 'SmartWills Planner';
-$assetBase = $assetBase ?? smartwills_asset_base();
+// FIXED: Hardcoded relative path to ensure CSS and images load correctly
+$assetBase = 'assets'; 
 $pageStyles = $pageStyles ?? [];
 $pageScripts = $pageScripts ?? [];
 ?>
@@ -21,4 +22,4 @@ $pageScripts = $pageScripts ?? [];
     <?php endforeach; ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
-<body>
+<body></body></body>

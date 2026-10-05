@@ -1,14 +1,48 @@
 <?php
-require_once __DIR__ . '/includes/bootstrap.php';
+    ob_start();
+    session_start();
 
-smartwills_require_login();
+    require_once __DIR__ . '/includes/bootstrap.php';
 
-$activePage = 'dashboard';
-$pageTitle = 'SmartWill Planner · Dashboard';
-$pageStyles = ['index.css'];
-$pageScripts = ['index.js'];
+    if (!isset($_SESSION["portal"]["user"]) || empty($_SESSION["portal"]["user"]["id"])) {
+        header("Location: login.php");
+        exit();
+    }
 
-include __DIR__ . '/layouts/header.php';
+    $activePage = 'dashboard';
+    $pageTitle = 'SmartWill Planner · Dashboard';
+    $pageStyles = ['index.css'];
+    $pageScripts = ['index.js'];
+
+    $userName = $_SESSION["portal"]["user"]["name"] ?? 'User';
+
+    $Cases = 0;
+    $NewClients = 0;
+    $TrainingModules = 0;
+    $EndingCommission = 0;
+
+    try {
+
+    // Fetch counts from the database  
+        $casesCount = $db->query("SELECT COUNT(*) AS total FROM cases");
+        $Cases = (int)($casesCount->rows[0]['total'] ?? 0);
+
+        $clientsCount = $db->query("SELECT COUNT(*) AS total FROM client");
+        $NewClients = (int)($clientsCount->rows[0]['total'] ?? 0);
+
+        $usersCount = $db->query("SELECT COUNT(*) AS total FROM users");
+        $TrainingModules = (int)($usersCount->rows[0]['total'] ?? 0);
+
+        $completedCount = $db->query("SELECT COUNT(*) AS total FROM cases WHERE LOWER(TRIM(case_status)) = 'completed'");
+        $EndingCommission = (int)($completedCount->rows[0]['total'] ?? 0);
+    } catch (Throwable $e) {
+        $Cases = 0;
+        $NewClients = 0;
+        $TrainingModules = 0;
+        $EndingCommission = 0;
+    }
+
+    include __DIR__ . '/layouts/header.php';
 ?>
 <div class="wrapper">
     <?php include __DIR__ . '/layouts/sidebar.php'; ?>
@@ -17,7 +51,7 @@ include __DIR__ . '/layouts/header.php';
         <div class="content">
             <div class="hero-banner">
                 <h5>DASHBOARD</h5>
-                <h1>Welcome back, Sarah 👋</h1>
+                <h1>Welcome back, <?php echo htmlspecialchars($userName); ?> 👋</h1>
                 <p>Here's an overview of your estate planning portal today.</p>
                 <div class="date-badge"><i class="far fa-calendar-alt"></i> <span id="realTimeDate">----Year--Month--Day</span></div>
             </div>
@@ -26,28 +60,28 @@ include __DIR__ . '/layouts/header.php';
                 <div class="stat-card">
                     <div class="stat-icon blue"><i class="fas fa-briefcase"></i></div>
                     <div>
-                        <div class="stat-number">42</div>
+                        <div class="stat-number"><?php echo (int)$Cases; ?></div>
                         <div class="stat-label">Active Cases</div>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon green"><i class="fas fa-user-plus"></i></div>
                     <div>
-                        <div class="stat-number">156</div>
+                        <div class="stat-number"><?php echo (int)$NewClients; ?></div>
                         <div class="stat-label">New Clients</div>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon orange"><i class="fas fa-chalkboard-user"></i></div>
                     <div>
-                        <div class="stat-number">12</div>
+                        <div class="stat-number"><?php echo (int)$TrainingModules; ?></div>
                         <div class="stat-label">Training Modules</div>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon purple"><i class="fas fa-dollar-sign"></i></div>
                     <div>
-                        <div class="stat-number">$3,420</div>
+                        <div class="stat-number"><?php echo (int)$EndingCommission; ?></div>
                         <div class="stat-label">Ending Comm.</div>
                     </div>
                 </div>

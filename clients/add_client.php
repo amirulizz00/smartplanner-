@@ -1,18 +1,32 @@
 <?php
+require_once __DIR__ . '/../includes/bootstrap.php';
+require_once __DIR__ . '/../controller/clientcontrol.php'; //calls the controller class in clientcontrol.php
+
 $activePage = 'clients';
-// Handle form submission (simulated save)
 $message = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Here you can insert into database, currently just simulation
-    $name = isset($_POST['client_name']) ? trim($_POST['client_name']) : '';
-    $contact = isset($_POST['contact']) ? trim($_POST['contact']) : '';
-    $status = isset($_POST['status']) ? $_POST['status'] : 'active';
-    if ($name && $contact) {
-        // Simulate successful save, redirect back to clients page
-        header('Location: clients.php?added=1');
-        exit;
-    } else {
+
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+    $controller = new ClientController();
+    $name = trim((string)($_POST['client_name'] ?? ''));
+    $contact = trim((string)($_POST['contact'] ?? ''));
+    $status = trim((string)($_POST['status'] ?? 'active'));
+    $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
+
+    if ($name === '' || $contact === '') {
         $message = 'Please fill in all required fields.';
+    } else {
+        $result = $controller->createClient([     //calls the createClient function in clientcontrol.php
+            'name' => $name,
+            'contact' => $contact,
+            'status' => $status,
+        ]);
+
+        if ($result['success']) {
+            header('Location: clients.php?added=1');
+            exit;
+        }
+
+        $message = $result['message'];
     }
 }
 ?>
@@ -26,16 +40,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="../assets/css/sidebar.css">
     <link rel="stylesheet" href="../assets/css/topbar.css">
     <link rel="stylesheet" href="../assets/css/components.css">
-    <!-- Can reuse clients.css styles, or use independent styles -->
     <link rel="stylesheet" href="../assets/css/clients.css">
     <link rel="stylesheet" href="../assets/css/add_client.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
 <div class="wrapper">
-    <?php include '../layouts/sidebar.php'; ?>
+    <?php require_once __DIR__ . '/../layouts/sidebar.php'; ?>
     <div class="main-content">
-        <?php include '../layouts/topbar.php'; ?>
+        <?php require_once __DIR__ . '/../layouts/topbar.php'; ?>
         <div class="content">
             <div class="page-header">
                 <h1><i class="fas fa-user-plus"></i> Add New Client</h1>
@@ -70,7 +83,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <option value="completed">Completed</option>
                             </select>
                         </div>
-                        <!-- More fields can be added here -->
                     </div>
 
                     <div class="modal-btns" style="margin-top:20px;">

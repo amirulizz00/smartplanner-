@@ -1,5 +1,5 @@
 <?php
-$activePage = 'clients';
+$activePage = 'tools';
 $clientId = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $clientName = 'Zhang Wei';
 $pageTitle = 'Funding Calculator - SmartWills';

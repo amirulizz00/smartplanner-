@@ -1,25 +1,32 @@
-<?php 
-$activePage = 'clients'; 
+<?php
+require_once __DIR__ . '/../includes/bootstrap.php';
+require_once __DIR__ . '/../controller/clientcontrol.php';  //calls the controller class in clientcontrol.php
 
-// Simulate customer data (keeping it in sync with clients.js)
-$clients = [
-    ['id' => 1, 'name' => 'Zhang Wei', 'phone' => '13812345678', 'status' => 'active', 'riskScore' => 8, 'updated' => '2026-06-15'],
-    ['id' => 2, 'name' => 'Li Fang', 'phone' => '13987654321', 'status' => 'done', 'riskScore' => 3, 'updated' => '2026-06-10'],
-    ['id' => 3, 'name' => 'Wang Qiang', 'phone' => '13755556666', 'status' => 'pending', 'riskScore' => 17, 'updated' => '2026-06-12']
-];
+$activePage = 'clients';
+$message = '';
 
-$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-$client = null;
-foreach ($clients as $c) {
-    if ($c['id'] === $id) {
-        $client = $c;
-        break;
-    }
-}
-// If not found, return to the list page
+$controller = new ClientController();
+$id = isset($_GET['id']) ? (int)$_GET['id'] : 0; // reads the client ID from the query parameter
+$client = $controller->getClientById($id);
+
 if (!$client) {
     header('Location: clients.php');
     exit;
+}
+
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {  //updates the client information
+    $result = $controller->updateClient($id, [  //calls the updateClient function in clientcontrol.php
+        'name' => $_POST['name'] ?? '',
+        'contact' => $_POST['contact'] ?? '',
+        'status' => $_POST['status'] ?? 'active',  
+    ]);
+
+    if ($result['success']) {
+        header('Location: clients.php?updated=1');
+        exit;   //redirectes on success
+    }
+
+    $message = $result['message'];
 }
 ?>
 <!DOCTYPE html>
@@ -37,11 +44,10 @@ if (!$client) {
 </head>
 <body>
 <div class="wrapper">
-    <?php include '../layouts/sidebar.php'; ?>
+    <?php require_once __DIR__ . '/../layouts/sidebar.php'; ?>
     <div class="main-content">
-        <?php include '../layouts/topbar.php'; ?>
+        <?php require_once __DIR__ . '/../layouts/topbar.php'; ?>
         <div class="content">
-            <!-- Page Title -->
             <div class="page-header">
                 <h1><i class="fas fa-user-edit"></i> Edit Client</h1>
                 <a href="clients.php" class="btn-primary" style="margin-left:auto; background:#6c757d;">
@@ -49,44 +55,33 @@ if (!$client) {
                 </a>
             </div>
 
-            <!-- Edit Form -->
+            <?php if ($message): ?>
+                <div class="alert alert-error" style="background:#fde8e8; padding:12px 20px; border-radius:10px; color:#b33c3c; margin-bottom:20px;">
+                    <i class="fas fa-exclamation-circle"></i> <?= htmlspecialchars($message) ?>
+                </div>
+            <?php endif; ?>
+
             <div style="background: white; border-radius: 20px; border: 1px solid #eef2f8; padding: 24px 30px;">
-                <form id="editForm" action="#" method="POST">
-                    <input type="hidden" name="id" value="<?php echo $client['id']; ?>">
+                <form id="editForm" action="edit_client.php?id=<?= (int)($client['id'] ?? 0) ?>" method="POST">
+                    <input type="hidden" name="id" value="<?= (int)($client['id'] ?? 0) ?>">
                     
                     <div class="fsection">
                         <h3><i class="fas fa-info-circle"></i> General Information</h3>
                         <div class="frow">
                             <label>Full Name</label>
-                            <input type="text" name="name" value="<?php echo htmlspecialchars($client['name']); ?>" required>
+                            <input type="text" name="name" value="<?= htmlspecialchars((string)($client['name'] ?? '')) ?>" required>
                         </div>
                         <div class="frow">
-                            <label>IC / Passport</label>
-                            <input type="text" name="ic" placeholder="Enter IC or passport number" value="SAMPLE-1234">
-                        </div>
-                        <div class="frow">
-                            <label>Mobile Number</label>
-                            <input type="text" name="phone" value="<?php echo htmlspecialchars($client['phone']); ?>" required>
-                        </div>
-                        <div class="frow">
-                            <label>Email Address</label>
-                            <input type="email" name="email" placeholder="example@email.com" value="client@example.com">
-                        </div>
-                        <div class="frow">
-                            <label>Address</label>
-                            <input type="text" name="address" placeholder="Enter full address" value="123 Main St">
+                            <label>Contact</label>
+                            <input type="text" name="contact" value="<?= htmlspecialchars((string)($client['contact'] ?? '')) ?>" required>
                         </div>
                         <div class="frow">
                             <label>Status</label>
                             <select name="status">
-                                <option value="active" <?php echo $client['status'] === 'active' ? 'selected' : ''; ?>>Active</option>
-                                <option value="done" <?php echo $client['status'] === 'done' ? 'selected' : ''; ?>>Completed</option>
-                                <option value="pending" <?php echo $client['status'] === 'pending' ? 'selected' : ''; ?>>Pending</option>
+                                <option value="active" <?= (($client['status'] ?? 'active') === 'active') ? 'selected' : '' ?>>Active</option>
+                                <option value="completed" <?= (($client['status'] ?? 'active') === 'completed') ? 'selected' : '' ?>>Completed</option>
+                                <option value="pending" <?= (($client['status'] ?? 'active') === 'pending') ? 'selected' : '' ?>>Pending</option>
                             </select>
-                        </div>
-                        <div class="frow">
-                            <label>Risk Score</label>
-                            <input type="number" name="riskScore" value="<?php echo $client['riskScore']; ?>" min="0" max="30">
                         </div>
                     </div>
 
@@ -103,6 +98,6 @@ if (!$client) {
 </div>
 
 <script src="../assets/js/global.js"></script>
-<script src="../assets/js/clients.js"></script> <!-- Reusable, but not required on this page. -->
+<script src="../assets/js/clients.js"></script>
 </body>
 </html>
