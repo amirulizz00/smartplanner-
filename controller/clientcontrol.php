@@ -7,7 +7,6 @@ class ClientController
 
     public function __construct()
     {
-<<<<<<< HEAD
         // Establish a database connection
         $this->conn = new mysqli('localhost', 'amirul', '123', 'smartwillsplanner', 3306);
 
@@ -16,10 +15,8 @@ class ClientController
         }
 
         $this->conn->set_charset('utf8mb4');
-=======
         global $db;
         $this->db = $db;
->>>>>>> de615321eee9dc059d692d869ea29d3a560ed934
     }
 
     public function listClients(): array

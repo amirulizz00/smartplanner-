@@ -133,13 +133,13 @@ include __DIR__ . '/../layouts/header.php';
                             <?php if (empty($cases)): ?>
                                 <tr>
                                     <td colspan="7" style="text-align:center;padding:40px;color:#8aa4bc;">
-                                        <?= !empty($searchTerm) ? 'No cases found matching "' . htmlspecialchars($searchTerm) . '"' : 'No cases found' ?>
+                                        <?= !empty($searchTerm) ? 'No cases found matching "' . mlspecialchars($searchTerm) . '"' : 'No cases found' ?>
                                     </td>
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($cases as $case): ?>
                                     <?php 
-                                        $clientName = !empty($case['client_name']) ? $case['client_name'] : '—';
+                                        $clientName = !empty($case['client']) ? $case['client'] : '—';
                                         $avatarChar = ($clientName !== '—') ? strtoupper(substr($clientName, 0, 1)) : '?';
                                         $statusSlug = $case['status_slug'] ?? 'pending';
                                         $displayStatus = ucwords(str_replace('-', ' ', $statusSlug));

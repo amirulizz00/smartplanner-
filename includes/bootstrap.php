@@ -8,19 +8,19 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Database Configuration & Connection (Zelozz style wrapper)
 $db_host = "localhost";
-$db_port = "8889"; // Matching your MAMP/WAMP port
-$db_user = "root";
-$db_pass = "root";
+$db_port = "3306"; // Matching your MAMP/WAMP port
+$db_user = "amirul";
+$db_pass = "123";
 $db_name = "smartwillsplanner";
 
 // OAuth Configuration
 define('GOOGLE_CLIENT_ID', '1042980156775-jpk14m71ptb9va813b4d2ijglj25jl4u.apps.googleusercontent.com');
 define('GOOGLE_CLIENT_SECRET', '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');
-define('GOOGLE_REDIRECT_URI', 'http://localhost:8888/smartwills%20planner%202%20-%20amin/smartwillplanner-main(amin)/controller/auth.php?provider=google');
+define('GOOGLE_REDIRECT_URI', 'http://localhost:8888/smartwills%20planner/smartwillplanner-main/controller/auth.php?provider=google');
 
 define('FB_APP_ID', '3189825431210554');
 define('FB_APP_SECRET', '550c9cf992da524ccd9c31b41c953674');
-define('FB_REDIRECT_URI', 'http://localhost:8888/smartwills%20planner%202%20-%20amin/smartwillplanner-main(amin)/controller/auth.php?provider=facebook');
+define('FB_REDIRECT_URI', 'http://localhost:8888/smartwills%20planner/smartwillplanner-main/controller/auth.php?provider=facebook');
 
 // Cloudflare Turnstile Keys
 define('TURNSTILE_SITE_KEY', '0x4AAAAAAFC7ThpyFfPXJlZA');
