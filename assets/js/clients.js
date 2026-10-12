@@ -10,7 +10,7 @@
 
 function applyClientFilters() {
     const rows = Array.from(document.querySelectorAll('#clientTableBody tr[data-client-row]'));
-    const searchInput = document.getElementById('searchInput');
+    const searchInput = document.getElementById('clientSearchInput');
     const riskFilter = document.getElementById('filterRisk');
     const statusFilter = document.getElementById('filterStatus');
 
@@ -35,8 +35,10 @@ function applyClientFilters() {
     });
 }
 
+
+//search and filter functionality
 document.addEventListener('DOMContentLoaded', function () {
-    const searchInput = document.getElementById('searchInput');
+    const searchInput = document.getElementById('clientSearchInput');
     const riskFilter = document.getElementById('filterRisk');
     const statusFilter = document.getElementById('filterStatus');
 

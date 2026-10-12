@@ -43,7 +43,7 @@ $statusLabelMap = [
                 <button class="btn-primary" id="addClientBtn" style="margin-left:auto;" onclick="window.location.href='add_client.php'"><i class="fas fa-plus"></i> Add Client</button>
             </div>
             <div class="toolbar">
-                <div class="search-box"><i class="fas fa-search"></i><input type="text" placeholder="Search by name / phone" id="searchInput"></div>
+                <div class="search-box"><i class="fas fa-search"></i><input type="text" placeholder="Search by name / phone" id="clientSearchInput"></div>
                 <div class="filter-group">
                     <select id="filterRisk"><option value="all">All Risks</option><option value="low">Low</option><option value="moderate">Moderate</option><option value="high">High</option></select>
                     <select id="filterStatus"><option value="all">All Status</option><option value="active">Active</option><option value="done">Completed</option><option value="pending">Pending</option></select>

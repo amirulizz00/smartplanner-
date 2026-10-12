@@ -1,5 +1,5 @@
 function filterCases() {
-    const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+    const keyword = document.getElementById('caseSearchInput').value.trim().toLowerCase();
     const statusFilter = document.getElementById('filterStatus').value;
     const rows = document.querySelectorAll('#caseTableBody tr[data-case-row]');
 
@@ -10,7 +10,9 @@ function filterCases() {
     });
 }
 
+
+//search and filter functionality
 document.addEventListener('DOMContentLoaded', function () {
-    document.getElementById('searchInput').addEventListener('input', filterCases);
+    document.getElementById('caseSearchInput').addEventListener('input', filterCases);
     document.getElementById('filterStatus').addEventListener('change', filterCases);
 });

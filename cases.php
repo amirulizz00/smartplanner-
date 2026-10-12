@@ -10,6 +10,7 @@ $pageStyles = ['cases.css'];
 $pageScripts = ['cases.js'];
 $caseController = new CaseController();
 $cases = $caseController->listCases();  //points to the listCases() method in casecontrol.php
+$query = $_GET['searchInput'] ?? '';
 
 //set default counts for each status
 $caseCounts = [
@@ -48,7 +49,7 @@ include __DIR__ . '/layouts/header.php';
             </div>
 
             <div class="toolbar">
-                <div class="search-box"><i class="fas fa-search"></i><input type="text" placeholder="Search by client / case ID" id="searchInput"></div>
+                <div class="search-box"><i class="fas fa-search"></i><input type="text" placeholder="Search by client / case ID" id="caseSearchInput"></div>
                 <div class="filter-group">
                     <select id="filterStatus">
                         <option value="all">All Status</option>

@@ -150,6 +150,7 @@ class CaseController
         $stmt->close();
         return ['success' => true];
     }
+    
 
     private function currentUserId(): int
     {
