@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/includes/bootstrap.php';
-require_once __DIR__ . '/controller/casecontrol.php';
+require_once __DIR__ . '/../includes/bootstrap.php';
+require_once __DIR__ . '/../controller/casecontrol.php';
 
 smartwills_require_login();
 

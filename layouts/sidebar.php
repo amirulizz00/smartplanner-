@@ -46,7 +46,7 @@ $assetBase = $assetBase ?? smartwills_asset_base();
             Clients
         </a>
 
-        <a href="<?php echo htmlspecialchars($pathPrefix); ?>cases.php"
+        <a href="<?php echo htmlspecialchars($pathPrefix); ?>cases/cases.php"
            class="menu-item <?= ($activePage == 'cases') ? 'active' : ''; ?>">
             Cases
         </a>

@@ -1,24 +1,25 @@
 <?php
 require_once __DIR__ . '/../includes/bootstrap.php';
-require_once __DIR__ . '/../controller/clientcontrol.php'; //calls the controller class in clientcontrol.php
+require_once __DIR__ . '/../controller/clientcontrol.php';
+
+smartwills_require_login();
 
 $activePage = 'clients';
 $message = '';
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $controller = new ClientController();
-    $name = trim((string)($_POST['client_name'] ?? ''));
+    $name    = trim((string)($_POST['client_name'] ?? ''));
     $contact = trim((string)($_POST['contact'] ?? ''));
-    $status = trim((string)($_POST['status'] ?? 'active'));
-    $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
+    $status  = trim((string)($_POST['status'] ?? 'active'));
 
     if ($name === '' || $contact === '') {
         $message = 'Please fill in all required fields.';
     } else {
-        $result = $controller->createClient([     //calls the createClient function in clientcontrol.php
-            'name' => $name,
+        $result = $controller->createClient([
+            'name'    => $name,
             'contact' => $contact,
-            'status' => $status,
+            'status'  => $status,
         ]);
 
         if ($result['success']) {

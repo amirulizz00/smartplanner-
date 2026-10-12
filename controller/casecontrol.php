@@ -6,6 +6,7 @@ class CaseController
 
     public function __construct()
     {
+        // Establish a database connection
         $this->conn = new mysqli('localhost', 'amirul', '123', 'smartwillsplanner', 3306);
 
         if ($this->conn->connect_error) {

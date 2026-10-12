@@ -1,11 +1,13 @@
 <?php
+require_once __DIR__ . '/../includes/bootstrap.php';
 
 class ClientController
 {
-    private mysqli $conn;
+    private $db;
 
     public function __construct()
     {
+<<<<<<< HEAD
         // Establish a database connection
         $this->conn = new mysqli('localhost', 'amirul', '123', 'smartwillsplanner', 3306);
 
@@ -14,18 +16,37 @@ class ClientController
         }
 
         $this->conn->set_charset('utf8mb4');
+=======
+        global $db;
+        $this->db = $db;
+>>>>>>> de615321eee9dc059d692d869ea29d3a560ed934
     }
 
     public function listClients(): array
     {
-        $result = $this->conn->query(
-            'SELECT client_ID AS id, client_name AS name, contact, client_risk AS risk, client_status AS status, time_updated AS updated_at FROM client ORDER BY client_ID DESC'
-        );
+        $userId = $_SESSION["portal"]["user"]["id"] ?? ($_SESSION['user_id'] ?? null);
 
+        $sql = "SELECT 
+                    client_ID AS id, 
+                    client_name AS name, 
+                    contact, 
+                    client_risk AS risk, 
+                    client_status AS status, 
+                    time_updated AS updated_at 
+                FROM client";
+
+        if ($userId) {
+            $safeUserId = (int)$userId;
+            $sql .= " WHERE user_id = {$safeUserId}";
+        }
+
+        $sql .= " ORDER BY client_ID DESC";
+
+        $result = $this->db->query($sql);
         $clients = [];
 
-        if ($result) {
-            while ($row = $result->fetch_assoc()) {
+        if ($result && isset($result->rows)) {
+            foreach ($result->rows as $row) {
                 $row['risk'] = strtolower((string)($row['risk'] ?? 'low'));
                 $row['status'] = strtolower((string)($row['status'] ?? 'active'));
                 $clients[] = $row;
@@ -37,19 +58,28 @@ class ClientController
 
     public function getClientById(int $id): ?array
     {
-        $stmt = $this->conn->prepare('SELECT client_ID AS id, client_name AS name, contact, client_risk AS risk, client_status AS status, time_updated AS updated_at FROM client WHERE client_ID = ? LIMIT 1');
-        $stmt->bind_param('i', $id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $client = $result->fetch_assoc();
-        $stmt->close();
+        $safeId = (int)$id;
+        $sql = "SELECT 
+                    client_ID AS id, 
+                    client_name AS name, 
+                    contact, 
+                    client_risk AS risk, 
+                    client_status AS status, 
+                    time_updated AS updated_at 
+                FROM client 
+                WHERE client_ID = {$safeId} 
+                LIMIT 1";
 
-        if ($client) {
+        $result = $this->db->query($sql);
+
+        if ($result && !empty($result->rows)) {
+            $client = $result->rows[0];
             $client['risk'] = strtolower((string)($client['risk'] ?? 'low'));
             $client['status'] = strtolower((string)($client['status'] ?? 'active'));
+            return $client;
         }
 
-        return $client ?: null;
+        return null;
     }
 
     public function createClient(array $data): array
@@ -68,24 +98,26 @@ class ClientController
 
         $status = $allowedStatusMap[strtolower($status)] ?? 'Active';
         $risk = 'Low';
-        $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
+        $userId = $_SESSION["portal"]["user"]["id"] ?? ($_SESSION['user_id'] ?? 0);
 
         if ($name === '' || $contact === '') {
             return ['success' => false, 'message' => 'Name and contact are required.'];
         }
 
-        $stmt = $this->conn->prepare('INSERT INTO client (client_name, contact, client_risk, client_status, user_id) VALUES (?, ?, ?, ?, ?)');
-        $stmt->bind_param('ssssi', $name, $contact, $risk, $status, $userId);
+        $sName = $this->db->escape($name);
+        $sContact = $this->db->escape($contact);
+        $sRisk = $this->db->escape($risk);
+        $sStatus = $this->db->escape($status);
+        $safeUserId = (int)$userId;
 
-        if (!$stmt->execute()) {
-            $stmt->close();
-            return ['success' => false, 'message' => 'Failed to create client: ' . $stmt->error];
+        $sql = "INSERT INTO client (client_name, contact, client_risk, client_status, user_id) 
+                VALUES ('{$sName}', '{$sContact}', '{$sRisk}', '{$sStatus}', {$safeUserId})";
+
+        if ($this->db->query($sql) === false) {
+            return ['success' => false, 'message' => 'Failed to create client in database.'];
         }
 
-        $clientId = $this->conn->insert_id;
-        $stmt->close();
-
-        return ['success' => true, 'message' => 'Client created successfully.', 'id' => $clientId];
+        return ['success' => true, 'message' => 'Client created successfully.'];
     }
 
     public function updateClient(int $id, array $data): array
@@ -108,30 +140,33 @@ class ClientController
             return ['success' => false, 'message' => 'Name and contact are required.'];
         }
 
-        $stmt = $this->conn->prepare('UPDATE client SET client_name = ?, contact = ?, client_status = ?, time_updated = CURRENT_TIMESTAMP WHERE client_ID = ?');
-        $stmt->bind_param('sssi', $name, $contact, $status, $id);
+        $safeId = (int)$id;
+        $sName = $this->db->escape($name);
+        $sContact = $this->db->escape($contact);
+        $sStatus = $this->db->escape($status);
 
-        if (!$stmt->execute()) {
-            $stmt->close();
-            return ['success' => false, 'message' => 'Failed to update client: ' . $stmt->error];
+        $sql = "UPDATE client 
+                SET client_name = '{$sName}', 
+                    contact = '{$sContact}', 
+                    client_status = '{$sStatus}', 
+                    time_updated = CURRENT_TIMESTAMP 
+                WHERE client_ID = {$safeId}";
+
+        if ($this->db->query($sql) === false) {
+            return ['success' => false, 'message' => 'Failed to update client in database.'];
         }
-
-        $stmt->close();
 
         return ['success' => true, 'message' => 'Client updated successfully.'];
     }
 
     public function deleteClient(int $id): array
     {
-        $stmt = $this->conn->prepare('DELETE FROM client WHERE client_ID = ?');
-        $stmt->bind_param('i', $id);
+        $safeId = (int)$id;
+        $sql = "DELETE FROM client WHERE client_ID = {$safeId}";
 
-        if (!$stmt->execute()) {
-            $stmt->close();
-            return ['success' => false, 'message' => 'Failed to delete client: ' . $stmt->error];
+        if ($this->db->query($sql) === false) {
+            return ['success' => false, 'message' => 'Failed to delete client from database.'];
         }
-
-        $stmt->close();
 
         return ['success' => true, 'message' => 'Client deleted successfully.'];
     }
