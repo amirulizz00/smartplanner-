@@ -1,16 +1,24 @@
 <?php
-require_once __DIR__ . '/includes/bootstrap.php';
-require_once __DIR__ . '/controller/casecontrol.php';
+// 1. Define $assetBase FIRST so header.php correctly points to the parent assets folder
+$assetBase = '../assets';
+
+require_once __DIR__ . '/../includes/bootstrap.php';
+require_once __DIR__ . '/../controller/casecontrol.php';
+require_once __DIR__ . '/../controller/clientcontrol.php';
 
 smartwills_require_login();
 
-$activePage = 'cases';
-$pageTitle = 'Add Case · SmartWills';
-$pageStyles = ['cases.css'];
+$activePage  = 'cases';
+$pageTitle   = 'Add Case · SmartWills';
+$pageStyles  = ['cases.css'];
 $pageScripts = [];
-$message = '';
-$caseController = new CaseController();
-$clients = $caseController->listClients();
+$message     = '';
+
+$caseController   = new CaseController();
+$clientController = new ClientController();
+
+// Fetch clients for dropdown selection
+$clients = $clientController->listClients();
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $result = $caseController->createCase($_POST);
@@ -23,12 +31,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $message = $result['message'];
 }
 
-include __DIR__ . '/layouts/header.php';
+include __DIR__ . '/../layouts/header.php';
 ?>
 <div class="wrapper">
-    <?php include __DIR__ . '/layouts/sidebar.php'; ?>
+    <?php include __DIR__ . '/../layouts/sidebar.php'; ?>
     <main class="main-content">
-        <?php include __DIR__ . '/layouts/topbar.php'; ?>
+        <?php include __DIR__ . '/../layouts/topbar.php'; ?>
         <div class="content">
             <div class="page-header">
                 <h1><i class="fas fa-plus-circle"></i> Add New Case</h1>
@@ -67,12 +75,12 @@ include __DIR__ . '/layouts/header.php';
                         </div>
                         <div class="frow">
                             <label>Status</label>
-                            <select name="status">
-                                <option value="in-progress">In Progress</option>
-                                <option value="in-review">In Review</option>
-                                <option value="completed">Completed</option>
-                                <option value="rejected">Rejected</option>
-                                <option value="pending">Pending</option>
+                            <select name="case_status">
+                                <option value="Pending">Pending</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="In Review">In Review</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Rejected">Rejected</option>
                             </select>
                         </div>
                     </div>
@@ -85,4 +93,4 @@ include __DIR__ . '/layouts/header.php';
         </div>
     </main>
 </div>
-<?php include __DIR__ . '/layouts/footer.php'; ?>
+<?php include __DIR__ . '/../layouts/footer.php'; ?>

@@ -1,32 +1,59 @@
 <?php
+require_once __DIR__ . '/../includes/bootstrap.php';
 
 class CaseController
 {
-    private mysqli $conn;
+    private $db;
 
     public function __construct()
     {
-        $this->conn = new mysqli('localhost', 'amirul', '123', 'smartwillsplanner', 3306);
-
-        if ($this->conn->connect_error) {
-            throw new RuntimeException('Database connection failed: ' . $this->conn->connect_error);
-        }
-
-        $this->conn->set_charset('utf8mb4');
+        global $db;
+        $this->db = $db;
     }
 
-    public function listCases(): array
+    public function listCases(?string $searchTerm = null): array
     {
-        $result = $this->conn->query(
-            'SELECT c.case_ID AS id, c.client_id, cl.client_name AS client, c.case_type AS type, '
-            . 'c.case_status AS status, c.time_submitted AS submitted, c.time_updated AS updated '
-            . 'FROM cases c INNER JOIN client cl ON cl.client_ID = c.client_id ORDER BY c.case_ID DESC'
-        );
+        $userId = $_SESSION["portal"]["user"]["id"] ?? ($_SESSION['user_id'] ?? null);
 
+        $sql = "SELECT 
+                    c.case_ID AS id, 
+                    c.case_type AS type, 
+                    c.case_status AS status, 
+                    c.time_submitted AS submitted_at, 
+                    c.time_updated AS updated_at,
+                    cl.client_name AS client_name
+                FROM cases c
+                LEFT JOIN client cl ON c.client_id = cl.client_ID";
+
+        $conditions = [];
+
+        if ($userId) {
+            $safeUserId = (int)$userId;
+            $conditions[] = "c.user_id = {$safeUserId}";
+        }
+
+        // Global search filtering
+        if (!empty($searchTerm)) {
+            $escaped = $this->db->escape(trim($searchTerm));
+            $conditions[] = "(cl.client_name LIKE '%{$escaped}%' 
+                             OR c.case_type LIKE '%{$escaped}%' 
+                             OR c.case_status LIKE '%{$escaped}%' 
+                             OR c.case_ID LIKE '%{$escaped}%')";
+        }
+
+        if (!empty($conditions)) {
+            $sql .= " WHERE " . implode(" AND ", $conditions);
+        }
+
+        $sql .= " ORDER BY c.case_ID DESC";
+
+        $result = $this->db->query($sql);
         $cases = [];
-        if ($result) {
-            while ($row = $result->fetch_assoc()) {
-                $row['status'] = $this->statusToSlug($row['status']);
+
+        if ($result && isset($result->rows)) {
+            foreach ($result->rows as $row) {
+                $row['type'] = (string)($row['type'] ?? '');
+                $row['status'] = (string)($row['status'] ?? 'Pending');
                 $cases[] = $row;
             }
         }
@@ -34,145 +61,144 @@ class CaseController
         return $cases;
     }
 
-    public function listClients(): array
-    {
-        $result = $this->conn->query('SELECT client_ID AS id, client_name AS name FROM client ORDER BY client_name');
-        $clients = [];
-
-        if ($result) {
-            while ($row = $result->fetch_assoc()) {
-                $clients[] = $row;
-            }
-        }
-
-        return $clients;
-    }
-
     public function getCaseById(int $id): ?array
     {
-        $stmt = $this->conn->prepare(
-            'SELECT c.case_ID AS id, c.client_id, cl.client_name AS client, c.case_type AS type, '
-            . 'c.case_status AS status, c.time_submitted AS submitted, c.time_updated AS updated '
-            . 'FROM cases c INNER JOIN client cl ON cl.client_ID = c.client_id '
-            . 'WHERE c.case_ID = ? LIMIT 1'
-        );
-        $stmt->bind_param('i', $id);
-        $stmt->execute();
-        $case = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
+        $safeId = (int)$id;
+        $sql = "SELECT 
+                    c.case_ID AS id, 
+                    c.case_type AS type, 
+                    c.case_status AS status, 
+                    c.time_submitted AS submitted_at, 
+                    c.time_updated AS updated_at,
+                    c.client_id,
+                    cl.client_name AS client_name
+                FROM cases c
+                LEFT JOIN client cl ON c.client_id = cl.client_ID
+                WHERE c.case_ID = {$safeId} 
+                LIMIT 1";
 
-        if ($case) {
-            $case['status'] = $this->statusToSlug($case['status']);
+        $result = $this->db->query($sql);
+
+        if ($result && !empty($result->rows)) {
+            return $result->rows[0];
         }
 
-        return $case ?: null;
+        return null;
     }
 
     public function createCase(array $data): array
     {
-        $clientId = (int)($data['client_id'] ?? 0);
-        $type = (string)($data['case_type'] ?? 'Will');
-        $status = $this->statusToDb((string)($data['status'] ?? 'in-progress'));
-        $userId = $this->currentUserId();
+        $caseType   = trim((string)($data['case_type'] ?? 'Will'));
+        $caseStatus = trim((string)($data['case_status'] ?? 'Pending'));
+        $clientId   = (int)($data['client_id'] ?? 0);
+        $userId     = $_SESSION["portal"]["user"]["id"] ?? ($_SESSION['user_id'] ?? 0);
 
-        if ($clientId <= 0 || $userId <= 0) {
-            return ['success' => false, 'message' => 'A valid client and logged-in user are required.'];
+        if ($clientId <= 0) {
+            return ['success' => false, 'message' => 'Valid Client ID is required.'];
         }
 
-        if (!in_array($type, ['Will', 'Trust', 'LPA', 'AMD'], true)) {
-            $type = 'Will';
+        $sType   = $this->db->escape($caseType);
+        $sStatus = $this->db->escape($caseStatus);
+        $safeUserId   = (int)$userId;
+        $safeClientId = (int)$clientId;
+
+        $sql = "INSERT INTO cases (case_type, case_status, time_submitted, time_updated, user_id, client_id) 
+                VALUES ('{$sType}', '{$sStatus}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, {$safeUserId}, {$safeClientId})";
+
+        if ($this->db->query($sql) === false) {
+            return ['success' => false, 'message' => 'Failed to create case in database.'];
         }
 
-        $stmt = $this->conn->prepare(
-            'INSERT INTO cases (case_type, case_status, time_updated, user_id, client_id) '
-            . 'VALUES (?, ?, CURRENT_TIMESTAMP, ?, ?)'
-        );
-        $stmt->bind_param('ssii', $type, $status, $userId, $clientId);
-
-        if (!$stmt->execute()) {
-            $message = $stmt->error;
-            $stmt->close();
-            return ['success' => false, 'message' => 'Failed to create case: ' . $message];
-        }
-
-        $id = $this->conn->insert_id;
-        $stmt->close();
-
-        return ['success' => true, 'id' => $id];
+        return ['success' => true, 'message' => 'Case created successfully.'];
     }
 
     public function updateCase(int $id, array $data): array
     {
-        $clientId = (int)($data['client_id'] ?? 0);
-        $type = (string)($data['case_type'] ?? 'Will');
-        $status = $this->statusToDb((string)($data['status'] ?? 'in-progress'));
+        $caseType   = trim((string)($data['case_type'] ?? 'Will'));
+        $caseStatus = trim((string)($data['case_status'] ?? 'Pending'));
 
-        if ($id <= 0 || $clientId <= 0) {
-            return ['success' => false, 'message' => 'A valid case and client are required.'];  //rejects nonexistant case or client
+        $safeId  = (int)$id;
+        $sType   = $this->db->escape($caseType);
+        $sStatus = $this->db->escape($caseStatus);
+
+        $sql = "UPDATE cases 
+                SET case_type = '{$sType}', 
+                    case_status = '{$sStatus}', 
+                    time_updated = CURRENT_TIMESTAMP 
+                WHERE case_ID = {$safeId}";
+
+        if ($this->db->query($sql) === false) {
+            return ['success' => false, 'message' => 'Failed to update case in database.'];
         }
 
-        if (!in_array($type, ['Will', 'Trust', 'LPA', 'AMD'], true)) {   //defaults to Will if invalid type is provided
-            $type = 'Will';
-        }
-
-        //prepares SQL command to update the case in the database
-        $stmt = $this->conn->prepare(
-            'UPDATE cases SET case_type = ?, case_status = ?, client_id = ?, time_updated = CURRENT_TIMESTAMP '
-            . 'WHERE case_ID = ?'   
-        );
-        $stmt->bind_param('ssii', $type, $status, $clientId, $id);
-
-        if (!$stmt->execute()) {
-            $message = $stmt->error;
-            $stmt->close();
-            return ['success' => false, 'message' => 'Failed to update case: ' . $message];
-        }
-
-        $stmt->close();
-        return ['success' => true];
+        return ['success' => true, 'message' => 'Case updated successfully.'];
     }
 
     public function deleteCase(int $id): array
     {
-        if ($id <= 0) {
-            return ['success' => false, 'message' => 'Invalid case ID.'];
+        $safeId = (int)$id;
+        $sql = "DELETE FROM cases WHERE case_ID = {$safeId}";
+
+        if ($this->db->query($sql) === false) {
+            return ['success' => false, 'message' => 'Failed to delete case from database.'];
         }
 
-        $stmt = $this->conn->prepare('DELETE FROM cases WHERE case_ID = ?');
-        $stmt->bind_param('i', $id);
+        return ['success' => true, 'message' => 'Case deleted successfully.'];
+    }
 
-        if (!$stmt->execute()) {
-            $message = $stmt->error;
-            $stmt->close();
-            return ['success' => false, 'message' => 'Failed to delete case: ' . $message];
+    public function handleRequest(): void
+    {
+        header('Content-Type: application/json');
+
+        try {
+            $action = $_GET['action'] ?? ($_POST['action'] ?? 'list');
+
+            switch ($action) {
+                case 'list':
+                    $search = $_GET['search'] ?? null;
+                    echo json_encode(['success' => true, 'data' => $this->listCases($search)]);
+                    return;
+
+                case 'get':
+                    $id = (int)($_GET['id'] ?? 0);
+                    $case = $this->getCaseById($id);
+                    echo json_encode(['success' => $case !== null, 'data' => $case]);
+                    return;
+
+                case 'create':
+                    echo json_encode($this->createCase($_POST));
+                    return;
+
+                case 'update':
+                    $id = (int)($_POST['id'] ?? 0);
+                    echo json_encode($this->updateCase($id, $_POST));
+                    return;
+
+                case 'delete':
+                    $id = (int)($_POST['id'] ?? ($_GET['id'] ?? 0));
+                    $result = $this->deleteCase($id);
+
+                    if (!empty($_POST['return_to'])) {
+                        header('Location: ' . $_POST['return_to']);
+                        exit;
+                    }
+
+                    echo json_encode($result);
+                    return;
+
+                default:
+                    echo json_encode(['success' => false, 'message' => 'Unknown action.']);
+                    return;
+            }
+        } catch (Throwable $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
-
-        $stmt->close();
-        return ['success' => true];
     }
+}
 
-    private function currentUserId(): int
-    {
-        if (isset($_SESSION['user_id'])) {
-            return (int)$_SESSION['user_id'];
-        }
+$caseController = new CaseController();
 
-        return (int)($_SESSION['portal']['user']['id'] ?? 0);
-    }
-
-    private function statusToDb(string $status): string
-    {
-        return [
-            'in-progress' => 'In Progress',
-            'in-review' => 'In Review',
-            'completed' => 'Completed',
-            'rejected' => 'Rejected',
-            'pending' => 'Pending',
-        ][strtolower($status)] ?? 'In Progress';
-    }
-
-    private function statusToSlug(string $status): string
-    {
-        return strtolower(str_replace(' ', '-', trim($status)));
-    }
+if (basename($_SERVER['PHP_SELF']) === 'casecontrol.php') {
+    $caseController->handleRequest();
+    exit;
 }

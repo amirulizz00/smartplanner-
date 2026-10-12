@@ -1,22 +1,39 @@
 <?php
 $currentScript = $_SERVER['SCRIPT_NAME'] ?? '';
-$caseCreateHref = 'add_case.php';
+
+// Determine relative path to cases/cases.php and cases/add_case.php dynamically
+$casesListHref = 'cases/cases.php';
+$caseCreateHref = 'cases/add_case.php';
+
 if (str_contains($currentScript, '/clients/plan/')) {
-    $caseCreateHref = '../../add_case.php';
-} elseif (str_contains($currentScript, '/clients/') || str_contains($currentScript, '/education/')) {
-    $caseCreateHref = '../add_case.php';
+    $casesListHref = '../../cases/cases.php';
+    $caseCreateHref = '../../cases/add_case.php';
+} elseif (
+    str_contains($currentScript, '/cases/') || 
+    str_contains($currentScript, '/clients/') || 
+    str_contains($currentScript, '/education/')
+) {
+    if (str_contains($currentScript, '/cases/')) {
+        $casesListHref = 'cases.php';
+        $caseCreateHref = 'add_case.php';
+    } else {
+        $casesListHref = '../cases/cases.php';
+        $caseCreateHref = '../cases/add_case.php';
+    }
 }
 ?>
 <div class="topbar">
 
     <div class="search-box">
-
-        <input
-            type="text"
-            placeholder="Search clients or cases..."
-            id="searchInput"
-        >
-
+        <form action="<?php echo htmlspecialchars($casesListHref); ?>" method="GET" id="topbarSearchForm" style="margin: 0; width: 100%;">
+            <input
+                type="text"
+                name="search"
+                placeholder="Search clients or cases..."
+                id="searchInput"
+                value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>"
+            >
+        </form>
     </div>
 
     <div class="topbar-right">

@@ -1,6 +1,10 @@
 <?php
-require_once __DIR__ . '/includes/bootstrap.php';
-require_once __DIR__ . '/controller/casecontrol.php';
+// 1. Define $assetBase FIRST so header.php correctly points to the parent assets folder
+$assetBase = '../assets';
+
+require_once __DIR__ . '/../includes/bootstrap.php';
+require_once __DIR__ . '/../controller/casecontrol.php';
+require_once __DIR__ . '/../controller/clientcontrol.php';
 
 smartwills_require_login();
 
@@ -10,9 +14,12 @@ $pageStyles = ['cases.css'];
 $pageScripts = [];
 $message = '';
 $caseId = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
 $caseController = new CaseController();
+$clientController = new ClientController();
+
 $case = $caseController->getCaseById($caseId);
-$clients = $caseController->listClients();
+$clients = $clientController->listClients();
 
 if (!$case) {
     header('Location: cases.php?error=notfound');
@@ -30,12 +37,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $message = $result['message'];
 }
 
-include __DIR__ . '/layouts/header.php';
+include __DIR__ . '/../layouts/header.php';
 ?>
 <div class="wrapper">
-    <?php include __DIR__ . '/layouts/sidebar.php'; ?>
+    <?php include __DIR__ . '/../layouts/sidebar.php'; ?>
     <main class="main-content">
-        <?php include __DIR__ . '/layouts/topbar.php'; ?>
+        <?php include __DIR__ . '/../layouts/topbar.php'; ?>
         <div class="content">
             <div class="page-header">
                 <h1><i class="fas fa-edit"></i> Edit Case #<?php echo $caseId; ?></h1>
@@ -56,19 +63,19 @@ include __DIR__ . '/layouts/header.php';
                         <h3><i class="fas fa-info-circle"></i> Case Information</h3>
                         <div class="frow">
                             <label>Client Name <span style="color:red;">*</span></label>
-                            <select name="client_id" required>   <!-- Dropdown for selecting client, saves ID to client_id -->
+                            <select name="client_id" required>
                                 <?php foreach ($clients as $client): ?>
-                                    <option value="<?= (int)$client['id'] ?>" <?= ((int)$client['id'] === (int)$case['client_id']) ? 'selected' : '' ?>><?= htmlspecialchars($client['name']) ?></option>
+                                    <option value="<?= (int)$client['id'] ?>" <?= ((int)$client['id'] === (int)($case['client_id'] ?? 0)) ? 'selected' : '' ?>><?= htmlspecialchars($client['name']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="frow">
                             <label>Case Type</label>
-                            <select name="case_type">  <!-- Dropdown for selecting case type, saves type to case_type -->
+                            <select name="case_type">
                                 <?php
                                 $types = ['Will', 'Trust', 'LPA', 'AMD'];
                                 foreach ($types as $t) {
-                                    $sel = ($t === $case['type']) ? 'selected' : '';
+                                    $sel = ($t === ($case['type'] ?? '')) ? 'selected' : '';
                                     echo "<option value=\"$t\" $sel>$t</option>";
                                 }
                                 ?>
@@ -76,17 +83,17 @@ include __DIR__ . '/layouts/header.php';
                         </div>
                         <div class="frow">
                             <label>Status</label>
-                            <select name="status">  <!-- Dropdown for selecting status, saves status to status -->
+                            <select name="case_status">
                                 <?php
                                 $statuses = [
-                                    'in-progress' => 'In Progress',
-                                    'in-review' => 'In Review',
-                                    'completed' => 'Completed',
-                                    'rejected' => 'Rejected',
-                                    'pending' => 'Pending',
+                                    'In Progress' => 'In Progress',
+                                    'In Review' => 'In Review',
+                                    'Completed' => 'Completed',
+                                    'Rejected' => 'Rejected',
+                                    'Pending' => 'Pending',
                                 ];
                                 foreach ($statuses as $val => $label) {
-                                    $sel = ($val === $case['status']) ? 'selected' : '';
+                                    $sel = ($val === ($case['status'] ?? '')) ? 'selected' : '';
                                     echo "<option value=\"$val\" $sel>$label</option>";
                                 }
                                 ?>
@@ -102,4 +109,4 @@ include __DIR__ . '/layouts/header.php';
         </div>
     </main>
 </div>
-<?php include __DIR__ . '/layouts/footer.php'; ?>
+<?php include __DIR__ . '/../layouts/footer.php'; ?>
