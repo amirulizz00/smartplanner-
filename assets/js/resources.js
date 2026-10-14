@@ -1,8 +1,9 @@
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.res-card').forEach(function (card) {
         card.addEventListener('click', function () {
-            const title = card.querySelector('h4').textContent;
-            alert('Opening "' + title + '" (demo)');
+            const resourceName = card.getAttribute('data-resource');
+            window.location.href = `resources/${resourceName}.php`;
+            
         });
     });
 
@@ -10,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (supportButton) {
         supportButton.addEventListener('click', function () {
-            alert('Support & Ticketing (demo)');
+            window.location.href = 'resources/ticket.php';
         });
     }
 });

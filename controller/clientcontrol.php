@@ -1,9 +1,11 @@
 <?php
 require_once __DIR__ . '/../includes/bootstrap.php';
 
+
 class ClientController
 {
     private $db;
+    private $conn;
 
     public function __construct()
     {

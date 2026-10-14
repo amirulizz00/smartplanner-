@@ -21,7 +21,7 @@ include __DIR__ . '/layouts/header.php';
                 <h1><i class="fas fa-database"></i> Resource Center</h1>
                 <button class="btn-primary" id="supportBtn">
                     <i class="fas fa-headset"></i>
-                    Support &amp; Ticketing
+                    Submit a Ticket
                 </button>
             </header>
 
@@ -32,7 +32,7 @@ include __DIR__ . '/layouts/header.php';
                     <p>Policies, AML, regulatory updates</p>
                     <div class="meta">
                         <span class="badge">12 items</span>
-                        <i class="fas fa-arrow-right"></i>
+                        <i class="fas fa-arrow-right" ></i>
                     </div>
                 </article>
 
@@ -68,7 +68,7 @@ include __DIR__ . '/layouts/header.php';
 
                 <article class="res-card" data-resource="support">
                     <div class="icon-wrap red"><i class="fas fa-ticket-alt"></i></div>
-                    <h4>Support &amp; Ticketing</h4>
+                    <h4>Support</h4>
                     <p>Submit tickets, FAQ, knowledge base</p>
                     <div class="meta">
                         <span class="badge red">3 items</span>

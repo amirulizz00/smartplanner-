@@ -24,6 +24,13 @@ if (str_contains($currentScript, '/clients/plan/')) {
 ?>
 <div class="topbar">
 
+    <div class="back">
+        <a href="javascript:history.back()">
+            <i class="fas fa-arrow-left"></i>
+            Back
+        </a>
+
+    </div>
     <div class="search-box">
         <form action="<?php echo htmlspecialchars($casesListHref); ?>" method="GET" id="topbarSearchForm" style="margin: 0; width: 100%;">
             <input

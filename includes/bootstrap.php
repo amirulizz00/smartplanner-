@@ -7,11 +7,11 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Database Configuration & Connection (Zelozz style wrapper)
-$db_host = "localhost";
+$db_host = "localhost"; 
 $db_port = "3306"; // Matching your MAMP/WAMP port
-$db_user = "amirul";
-$db_pass = "123";
-$db_name = "smartwillsplanner";
+$db_user = "amirul"; //your phpmyadmin username
+$db_pass = "123"; //your phpmyadmin password
+$db_name = "smartwillsplanner"; //your phpmyadmin database name (make sure to import .sql into here)
 
 // OAuth Configuration
 define('GOOGLE_CLIENT_ID', '1042980156775-jpk14m71ptb9va813b4d2ijglj25jl4u.apps.googleusercontent.com');
