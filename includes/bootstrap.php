@@ -16,7 +16,7 @@ $db_name = "smartwillsplanner"; //your phpmyadmin database name (make sure to im
 // OAuth Configuration
 define('GOOGLE_CLIENT_ID', '1042980156775-jpk14m71ptb9va813b4d2ijglj25jl4u.apps.googleusercontent.com');
 define('GOOGLE_CLIENT_SECRET', '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');
-define('GOOGLE_REDIRECT_URI', 'http://localhost:8888/smartwills%20planner/smartwillplanner-main/controller/auth.php?provider=google');
+define('GOOGLE_REDIRECT_URI', 'http://localhost:8888/controller/auth.php?provider=google');
 
 define('FB_APP_ID', '3189825431210554');
 define('FB_APP_SECRET', '550c9cf992da524ccd9c31b41c953674');
